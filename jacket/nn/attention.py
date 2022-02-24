@@ -1,9 +1,11 @@
-from typing import Optional
 from functools import partial
+from typing import Optional
+
 import jax
-import jax.numpy as jnp
 import jax.nn as nn
-from jacket.nn.utils import LayerNorm, Linear, Sequential, Dropout, Dense
+import jax.numpy as jnp
+
+from jacket.nn.utils import Linear
 
 
 @jax.jit

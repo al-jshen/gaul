@@ -1,7 +1,7 @@
 import jax
-import jax.numpy as jnp
 import jax.nn as nn
-from functools import partial
+import jax.numpy as jnp
+
 from jacket.nn import attention
 from jacket.nn.utils import Dense, Dropout, Embedding, LayerNorm, Sequential
 
@@ -37,7 +37,6 @@ class EncoderLayer:
         self.drop1 = Dropout(dropout_rate, key=k4)
         self.drop2 = Dropout(dropout_rate, key=k5)
 
-    @partial(jax.jit, static_argnums=(0, 2))
     def __call__(self, x, training=False, mask=None):
         attn = self.mha(x, x, x, mask)
         attn = self.drop1(attn, training)
@@ -99,7 +98,6 @@ class DecoderLayer:
         self.drop2 = Dropout(0.1, key=k6)
         self.drop3 = Dropout(0.1, key=k7)
 
-    @partial(jax.jit, static_argnums=(0, 3))
     def __call__(
         self, x, encoder_output, training=False, look_ahead_mask=None, padding_mask=None
     ):
@@ -152,7 +150,6 @@ class Encoder:
 
         self.dropout = Dropout(dropout_rate, key=jax.random.split(self.key)[1])
 
-    @partial(jax.jit, static_argnums=(0, 2))
     def __call__(self, x, training=False, mask=None):
         seq_len = x.shape[1]
         x = self.embedding(x)
@@ -200,7 +197,6 @@ class Decoder:
 
         self.dropout = Dropout(dropout_rate, key=jax.random.split(self.key)[1])
 
-    @partial(jax.jit, static_argnums=(0, 3))
     def __call__(
         self, x, encoder_output, training=False, look_ahead_mask=None, padding_mask=None
     ):
@@ -254,7 +250,6 @@ class Transformer:
         )
         self.final = Dense(model_size, target_vocab_size, activation=nn.relu, key=k3)
 
-    @partial(jax.jit, static_argnums=(0, 3))
     def __call__(self, x, y, training=False):
         encoding_padding_mask = make_padding_mask(x)
         decoding_padding_mask = make_padding_mask(x)

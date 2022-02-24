@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+
 from jacket.nn.transformer import Transformer
 
 
@@ -64,7 +65,7 @@ class TestTransformerShapes:
     def test_transformer(self):
         x = jnp.ones((batch_size, input_sequence_length))
         y = jnp.ones((batch_size, target_sequence_length))
-        z = transformer(x, y)
+        z = transformer(x, y, training=True)
         assert z.shape == (
             batch_size,
             target_sequence_length,

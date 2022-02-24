@@ -1,7 +1,8 @@
+from functools import partial
 from typing import Any, Callable, Iterable
+
 import jax
 import jax.numpy as jnp
-from functools import partial
 
 
 class Sequential:
@@ -20,8 +21,9 @@ class Linear:
     def __init__(self, input_size: int, output_size: int, key=None):
         if key is None:
             key = jax.random.PRNGKey(0)
-        self.weights = jax.random.normal(key, (input_size, output_size))
-        self.bias = jnp.zeros(output_size)
+        k1, k2 = jax.random.split(key)
+        self.weights = jax.random.normal(k1, (input_size, output_size))
+        self.bias = jax.random.normal(k2, (output_size,))
 
     @partial(jax.jit, static_argnums=(0,))
     def __call__(self, x):
@@ -45,7 +47,6 @@ class Dropout:
         self.p = jnp.clip(p, 0.0, 1.0)
         self.key = jax.random.PRNGKey(0) if key is None else key
 
-    @partial(jax.jit, static_argnums=(0, 2))
     def __call__(self, x, training=False):
         if training:
             if self.p == 0.0:

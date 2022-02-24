@@ -1,7 +1,5 @@
 import jax
 import jax.numpy as jnp
-import jax.random as random
-import jax.scipy.stats as stats
 from tqdm import tqdm
 
 
@@ -32,7 +30,7 @@ def leapfrog(params_init, momentum_init, n_steps, stepsize, grad_fn, inv_mass):
     return params, momentum
 
 
-def opt(params_init, n_steps, lr, fn, grad_fn, hess_fn):
+def opt(params_init, n_steps, lr, grad_fn, hess_fn):
     params = params_init
     for _ in tqdm(range(n_steps)):
         grad = grad_fn(params)
@@ -50,7 +48,6 @@ def sample(
     n_steps_opt,
     stepsize_opt,
     n_params,
-    n_tune,
     key,
 ):
     samples = []
@@ -65,7 +62,6 @@ def sample(
         params,
         n_steps_opt,
         stepsize_opt,
-        ln_posterior,
         ln_posterior_grad,
         ln_posterior_hessian,
     )
@@ -89,7 +85,7 @@ def sample(
         )
 
         key, subkey = jax.random.split(key)
-        params, momentum, p_accept, accepted = accept_reject(
+        params, momentum, p_accept, _ = accept_reject(
             (params, momentum),
             (params_new, momentum_new),
             ln_posterior,
