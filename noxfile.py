@@ -44,9 +44,10 @@ def lint(session):
 
 
 @nox.session(python=versions)
-def black(session):
+def format(session):
     args = session.posargs or locations
-    install_with_constraints(session, "black")
+    install_with_constraints(session, "isort", "black")
+    session.run("isort", ".")
     session.run("black", *args)
 
 

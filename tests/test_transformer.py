@@ -2,7 +2,6 @@ import jax.numpy as jnp
 
 from jacket.nn.transformer import Transformer
 
-
 num_heads = 8
 model_size = 256
 feedforward_size = 512
