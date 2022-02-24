@@ -1,8 +1,9 @@
 [flake8]
-select = B,B9,BLK,C,E,F,I,W
+select = B,B9,BLK,C,E,F,I,W,D
 max-complexity = 10
 max-line-length = 80
 ignore=W503,E501
 application-import-names = jacket,tests
 import-order-style = google
+docstring-convention = google
 exclude=__pycache__,.ipynb_checkpoints
