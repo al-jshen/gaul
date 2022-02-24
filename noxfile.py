@@ -4,6 +4,7 @@ import nox
 
 locations = "jacket", "tests", "noxfile.py"
 nox.options.sessions = "lint", "tests"
+versions = ["3.9", "3.10"]
 
 
 def install_with_constraints(session, *args, **kwargs):
@@ -20,7 +21,7 @@ def install_with_constraints(session, *args, **kwargs):
         session.install(f"--constraint={reqs.name}", *args, **kwargs)
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=versions)
 def tests(session):
     args = session.posargs or ["--cov", "-m", "not e2e"]
     session.run("poetry", "install", "--no-dev", external=True)
@@ -28,7 +29,7 @@ def tests(session):
     session.run("pytest", *args)
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=versions)
 def lint(session):
     args = session.posargs or locations
     install_with_constraints(
@@ -42,7 +43,7 @@ def lint(session):
     session.run("flake8", *args)
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=versions)
 def black(session):
     args = session.posargs or locations
     install_with_constraints(session, "black")
