@@ -43,19 +43,19 @@ class Dense(Linear):
 class Dropout:
     def __init__(self, p: float, key=None):
         self.p = jnp.clip(p, 0.0, 1.0)
-        if key is None:
-            self.key = jax.random.PRNGKey(0)
-        else:
-            self.key = key
+        self.key = jax.random.PRNGKey(0) if key is None else key
 
-    @partial(jax.jit, static_argnums=(0,))
-    def __call__(self, x):
-        if self.p == 0.0:
+    @partial(jax.jit, static_argnums=(0, 2))
+    def __call__(self, x, training=False):
+        if training:
+            if self.p == 0.0:
+                return x
+            self.key, subkey = jax.random.split(self.key)
+            keep_rate = 1.0 - self.p
+            keep = jax.random.bernoulli(subkey, keep_rate, shape=x.shape)
+            return keep * x / keep_rate
+        else:
             return x
-        self.key, subkey = jax.random.split(self.key)
-        keep_rate = 1.0 - self.p
-        keep = jax.random.bernoulli(subkey, keep_rate, shape=x.shape)
-        return keep * x / keep_rate
 
 
 class LayerNorm:
