@@ -6,3 +6,4 @@ build
 .virtual_documents
 .coverage
 .nox
+coverage.xml
