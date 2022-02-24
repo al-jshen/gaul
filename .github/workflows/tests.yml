@@ -1,5 +1,14 @@
 name: Jacket
-on: push
+
+on: 
+  push: 
+    branches:
+      - '*' 
+    paths: 
+      - 'jacket/**'
+      - 'tests/**'
+      - 'examples/**'
+
 jobs: 
   tests:
     strategy:
