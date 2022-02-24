@@ -4,6 +4,10 @@ version = "0.1.0"
 description = ""
 authors = ["Jeff Shen <jshen2014@hotmail.com>"]
 license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/al-jshen/jacket"
+repository = "https://github.com/al-jshen/jacket"
+keywords = ["jax"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -12,6 +16,19 @@ jaxlib = "^0.3.0"
 tqdm = "^4.62.3"
 
 [tool.poetry.dev-dependencies]
+pytest = "^7.0.1"
+pytest-cov = "^3.0.0"
+coverage = {extras = ["toml"], version = "^6.3.2"}
+
+[tool.coverage.paths]
+source = ["jacket", "*/site-packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["jacket"]
+
+[tool.coverage.report]
+show_missing = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
