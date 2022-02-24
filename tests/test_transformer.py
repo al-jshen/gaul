@@ -1,71 +1,72 @@
 import jax.numpy as jnp
-from jx.nn import transformer
+from jacket.nn.transformer import Transformer
+
+
+num_heads = 8
+model_size = 256
+feedforward_size = 512
+batch_size = 16
+num_layers = 2
+input_vocab_size = 100
+target_vocab_size = 101
+input_position_encoding = 150
+target_position_encoding = 151
+dropout_rate = 0.2
+input_sequence_length = 17
+target_sequence_length = 26
+
+transformer = Transformer(
+    num_heads=num_heads,
+    model_size=model_size,
+    feedforward_size=feedforward_size,
+    num_layers=num_layers,
+    input_vocab_size=input_vocab_size,
+    target_vocab_size=target_vocab_size,
+    input_position_encoding=input_position_encoding,
+    target_position_encoding=target_position_encoding,
+    dropout_rate=dropout_rate,
+)
 
 
 class TestTransformerShapes:
-    def __init__(self) -> None:
-        self.num_heads = 8
-        self.model_size = 256
-        self.feedforward_size = 512
-        self.batch_size = 16
-        self.num_layers = 2
-        self.input_vocab_size = 100
-        self.target_vocab_size = 101
-        self.input_position_encoding = 150
-        self.target_position_encoding = 151
-        self.dropout_rate = 0.2
-        self.input_sequence_length = 17
-        self.target_sequence_length = 26
-        self.transformer = transformer.Transformer(
-            num_layers=self.num_layers,
-            num_heads=self.num_heads,
-            model_size=self.model_size,
-            feedforward_size=self.feedforward_size,
-            dropout_rate=self.dropout_rate,
-            input_vocab_size=self.input_vocab_size,
-            target_vocab_size=self.target_vocab_size,
-            input_position_encoding=self.input_position_encoding,
-            target_position_encoding=self.target_position_encoding,
-        )
-
     def test_encoder_decoder_layers(self):
-        enc = self.transformer.encoder.encoding_layers[0]
-        x1 = jnp.ones((self.batch_size, self.input_sequence_length, self.model_size))
+        enc = transformer.encoder.encoding_layers[0]
+        x1 = jnp.ones((batch_size, input_sequence_length, model_size))
         y = enc(x1)
-        assert y.shape == (self.batch_size, self.input_sequence_length, self.model_size)
+        assert y.shape == (batch_size, input_sequence_length, model_size)
 
-        dec = self.transformer.decoder.decoding_layers[0]
-        x2 = jnp.ones((self.batch_size, self.target_sequence_length, self.model_size))
+        dec = transformer.decoder.decoding_layers[0]
+        x2 = jnp.ones((batch_size, target_sequence_length, model_size))
         z = dec(x2, y)
         assert z.shape == (
-            self.batch_size,
-            self.target_sequence_length,
-            self.model_size,
+            batch_size,
+            target_sequence_length,
+            model_size,
         )
 
     def test_encoder_decoder(self):
-        x1 = jnp.ones((self.batch_size, self.input_sequence_length))
-        y = self.transformer.encoder(x1)
+        x1 = jnp.ones((batch_size, input_sequence_length))
+        y = transformer.encoder(x1)
         assert y.shape == (
-            self.batch_size,
-            self.target_sequence_length,
-            self.model_size,
+            batch_size,
+            input_sequence_length,
+            model_size,
         )
 
-        x2 = jnp.ones((self.batch_size, self.target_sequence_length))
-        z = self.transformer.decoder(x2, y)
+        x2 = jnp.ones((batch_size, target_sequence_length))
+        z = transformer.decoder(x2, y)
         assert z.shape == (
-            self.batch_size,
-            self.target_sequence_length,
-            self.model_size,
+            batch_size,
+            target_sequence_length,
+            model_size,
         )
 
     def test_transformer(self):
-        x = jnp.ones((self.batch_size, self.input_sequence_length))
-        y = jnp.ones((self.batch_size, self.target_sequence_length))
-        z = self.transformer(x, y)
+        x = jnp.ones((batch_size, input_sequence_length))
+        y = jnp.ones((batch_size, target_sequence_length))
+        z = transformer(x, y)
         assert z.shape == (
-            self.batch_size,
-            self.target_sequence_length,
-            self.model_size,
+            batch_size,
+            target_sequence_length,
+            target_vocab_size,
         )
