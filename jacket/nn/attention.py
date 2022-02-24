@@ -3,7 +3,7 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 import jax.nn as nn
-from jx.nn.utils import LayerNorm, Linear, Sequential, Dropout, Dense
+from jacket.nn.utils import LayerNorm, Linear, Sequential, Dropout, Dense
 
 
 @jax.jit

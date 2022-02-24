@@ -2,8 +2,8 @@ import jax
 import jax.numpy as jnp
 import jax.nn as nn
 from functools import partial
-from jx.nn import attention
-from jx.nn.utils import Dense, Dropout, Embedding, LayerNorm, Sequential
+from jacket.nn import attention
+from jacket.nn.utils import Dense, Dropout, Embedding, LayerNorm, Sequential
 
 
 class EncoderLayer:
