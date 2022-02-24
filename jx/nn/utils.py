@@ -69,3 +69,12 @@ class LayerNorm:
         mean = jnp.mean(x, axis=-1, keepdims=True)
         std = jnp.std(x, axis=-1, keepdims=True)
         return self.gamma * (x - mean) / (std + self.eps) + self.beta
+
+
+class Embedding:
+    def __init__(self, vocab_size, embedding_dim, key=None):
+        self.key = jax.random.PRNGKey(0) if key is None else key
+        self.embeddings = jax.random.normal(self.key, (vocab_size, embedding_dim))
+
+    def __call__(self, x):
+        return self.embeddings[x.astype(jnp.int32)]

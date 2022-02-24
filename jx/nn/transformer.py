@@ -3,7 +3,7 @@ import jax.numpy as jnp
 import jax.nn as nn
 from functools import partial
 from jx.nn import attention
-from jx.nn.utils import Dense, Dropout, LayerNorm, Sequential
+from jx.nn.utils import Dense, Dropout, Embedding, LayerNorm, Sequential
 
 
 class EncoderLayer:
@@ -49,10 +49,10 @@ class EncoderLayer:
 
 
 def make_padding_mask(x):
-    return (x == 0).astype(jnp.float32)
+    return (x == 0).astype(jnp.float32).reshape(x.shape[0], 1, 1, -1)
 
 
-def make_lookahead_mask(size: int):
+def make_look_ahead_mask(size: int):
     return -jnp.tri(size) + 1.0
 
 
@@ -101,9 +101,9 @@ class DecoderLayer:
 
     @partial(jax.jit, static_argnums=(0, 3))
     def __call__(
-        self, x, encoder_output, training=False, lookahead_mask=None, padding_mask=None
+        self, x, encoder_output, training=False, look_ahead_mask=None, padding_mask=None
     ):
-        attn1 = self.mha1(x, x, x, lookahead_mask)
+        attn1 = self.mha1(x, x, x, look_ahead_mask)
         attn1 = self.drop1(attn1, training)
         attn1 = self.layernorm1(attn1 + x)
 
@@ -114,3 +114,157 @@ class DecoderLayer:
         ffn = self.ffn(attn2)
         ffn = self.drop3(ffn, training)
         return self.layernorm3(ffn + attn2)
+
+
+class Encoder:
+    def __init__(
+        self,
+        model_size: int,
+        num_layers: int,
+        num_heads: int,
+        feedforward_size: int,
+        input_vocab_size: int,
+        maximum_position_encoding: int,
+        dropout_rate=0.5,
+        key=None,
+    ):
+        self.model_size = model_size
+        self.num_layers = num_layers
+        self.num_heads = num_heads
+        self.feedforward_size = feedforward_size
+        self.key = jax.random.PRNGKey(0) if key is None else key
+
+        self.embedding = Embedding(input_vocab_size, model_size)
+        self.position_encoding = make_positional_encodings(
+            maximum_position_encoding, model_size
+        )
+
+        self.encoding_layers = [
+            EncoderLayer(
+                model_size=model_size,
+                num_heads=num_heads,
+                feedforward_size=feedforward_size,
+                dropout_rate=dropout_rate,
+                key=k,
+            )
+            for k in jax.random.split(self.key, num_layers)
+        ]
+
+        self.dropout = Dropout(dropout_rate, key=jax.random.split(self.key)[1])
+
+    @partial(jax.jit, static_argnums=(0, 2))
+    def __call__(self, x, training=False, mask=None):
+        seq_len = x.shape[1]
+        x = self.embedding(x)
+        x = x * jnp.sqrt(self.model_size)
+        x = x + self.position_encoding[:seq_len, :]
+        x = self.dropout(x, training)
+
+        for layer in self.encoding_layers:
+            x = layer(x, training, mask)
+
+        return x
+
+
+class Decoder:
+    def __init__(
+        self,
+        model_size: int,
+        num_layers: int,
+        num_heads: int,
+        feedforward_size: int,
+        target_vocab_size: int,
+        maximum_position_encoding: int,
+        dropout_rate: float = 0.5,
+        key=None,
+    ):
+        self.model_size = model_size
+        self.num_layers = num_layers
+        self.num_heads = num_heads
+        self.key = jax.random.PRNGKey(0) if key is None else key
+
+        self.embedding = Embedding(target_vocab_size, model_size)
+        self.position_encoding = make_positional_encodings(
+            maximum_position_encoding, model_size
+        )
+
+        self.decoding_layers = [
+            DecoderLayer(
+                model_size=model_size,
+                num_heads=num_heads,
+                feedforward_size=feedforward_size,
+                key=k,
+            )
+            for k in jax.random.split(self.key, num_layers)
+        ]
+
+        self.dropout = Dropout(dropout_rate, key=jax.random.split(self.key)[1])
+
+    @partial(jax.jit, static_argnums=(0, 3))
+    def __call__(
+        self, x, encoder_output, training=False, look_ahead_mask=None, padding_mask=None
+    ):
+        seq_len = x.shape[1]
+        x = self.embedding(x)
+        x = x * jnp.sqrt(self.model_size)
+        x = x + self.position_encoding[:seq_len, :]
+        x = self.dropout(x, training)
+
+        for layer in self.decoding_layers:
+            x = layer(x, encoder_output, training, look_ahead_mask, padding_mask)
+
+        return x
+
+
+class Transformer:
+    def __init__(
+        self,
+        model_size: int,
+        num_layers: int,
+        num_heads: int,
+        feedforward_size: int,
+        input_vocab_size: int,
+        target_vocab_size: int,
+        input_position_encoding: int,
+        target_position_encoding: int,
+        dropout_rate: float = 0.5,
+        key=None,
+    ):
+        self.key = jax.random.PRNGKey(0) if key is None else key
+        k1, k2, k3 = jax.random.split(self.key, 3)
+        self.encoder = Encoder(
+            model_size=model_size,
+            num_layers=num_layers,
+            num_heads=num_heads,
+            feedforward_size=feedforward_size,
+            input_vocab_size=input_vocab_size,
+            maximum_position_encoding=input_position_encoding,
+            dropout_rate=dropout_rate,
+            key=k1,
+        )
+        self.decoder = Decoder(
+            model_size=model_size,
+            num_layers=num_layers,
+            num_heads=num_heads,
+            feedforward_size=feedforward_size,
+            target_vocab_size=target_vocab_size,
+            maximum_position_encoding=target_position_encoding,
+            dropout_rate=dropout_rate,
+            key=k2,
+        )
+        self.final = Dense(model_size, target_vocab_size, activation=nn.relu, key=k3)
+
+    @partial(jax.jit, static_argnums=(0, 3))
+    def __call__(self, x, y, training=False):
+        encoding_padding_mask = make_padding_mask(x)
+        decoding_padding_mask = make_padding_mask(x)
+        look_ahead_mask = make_look_ahead_mask(y.shape[1])
+        decoder_target_padding_mask = make_padding_mask(y)
+        look_ahead_mask = jnp.maximum(decoder_target_padding_mask, look_ahead_mask)
+
+        encoder_output = self.encoder(x, training, encoding_padding_mask)
+        decoder_output = self.decoder(
+            y, encoder_output, training, look_ahead_mask, decoding_padding_mask
+        )
+        output = self.final(decoder_output)
+        return nn.softmax(output, axis=-1)
