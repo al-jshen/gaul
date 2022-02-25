@@ -3,8 +3,8 @@ from typing import Callable
 
 import jax
 
+from jacket.tree_utils import tree_zeros_like
 from jacket.types import Pytree
-from jacket.utils import tree_zeros_like
 
 
 def sgd(
