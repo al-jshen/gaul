@@ -1,3 +1,5 @@
+from typing import Optional
+
 import jax
 import jax.nn as nn
 import jax.numpy as jnp
@@ -14,11 +16,13 @@ class EncoderLayer:
         num_heads: int,
         feedforward_size: int,
         dropout_rate=0.5,
-        key: PRNGKey = jax.random.PRNGKey(0),
+        key: Optional[PRNGKey] = None,
     ):
         self.model_size = model_size
         self.hidden_size = feedforward_size
         self.key = key
+        if self.key is None:
+            self.key = jax.random.PRNGKey(0)
 
         k1, k2, k3, k4, k5 = jax.random.split(self.key, 5)
         self.mha = attention.MultiheadAttention(
@@ -72,11 +76,13 @@ class DecoderLayer:
         model_size: int,
         num_heads: int,
         feedforward_size: int,
-        key: PRNGKey = jax.random.PRNGKey(0),
+        key: Optional[PRNGKey] = None,
     ):
         self.model_size = model_size
         self.hidden_size = feedforward_size
         self.key = key
+        if self.key is None:
+            self.key = jax.random.PRNGKey(0)
 
         k1, k2, k3, k4, k5, k6, k7 = jax.random.split(self.key, 7)
         self.mha1 = attention.MultiheadAttention(
@@ -134,13 +140,15 @@ class Encoder:
         input_vocab_size: int,
         maximum_position_encoding: int,
         dropout_rate: float = 0.5,
-        key: PRNGKey = jax.random.PRNGKey(0),
+        key: Optional[PRNGKey] = None,
     ):
         self.model_size = model_size
         self.num_layers = num_layers
         self.num_heads = num_heads
         self.feedforward_size = feedforward_size
         self.key = key
+        if self.key is None:
+            self.key = jax.random.PRNGKey(0)
 
         self.embedding = Embedding(input_vocab_size, model_size)
         self.position_encoding = make_positional_encodings(
@@ -183,12 +191,14 @@ class Decoder:
         target_vocab_size: int,
         maximum_position_encoding: int,
         dropout_rate: float = 0.5,
-        key: PRNGKey = jax.random.PRNGKey(0),
+        key: Optional[PRNGKey] = None,
     ):
         self.model_size = model_size
         self.num_layers = num_layers
         self.num_heads = num_heads
         self.key = key
+        if self.key is None:
+            self.key = jax.random.PRNGKey(0)
 
         self.embedding = Embedding(target_vocab_size, model_size)
         self.position_encoding = make_positional_encodings(
@@ -239,9 +249,11 @@ class Transformer:
         input_position_encoding: int,
         target_position_encoding: int,
         dropout_rate: float = 0.5,
-        key: PRNGKey = jax.random.PRNGKey(0),
+        key: Optional[PRNGKey] = None,
     ):
         self.key = key
+        if self.key is None:
+            self.key = jax.random.PRNGKey(0)
         k1, k2, k3 = jax.random.split(self.key, 3)
         self.encoder = Encoder(
             model_size=model_size,

@@ -17,8 +17,9 @@ def scaled_dot_product_attention(
     Compute scaled dot-product attention following Eq. 1 in Vaswani et al.
     (2017)
 
-    # q shape: (..., seq_len_q, depth) # k shape: (..., seq_len_k,
-    depth) # v shape: (..., seq_len_v, depth_v)
+    - q shape: (..., seq_len_q, depth)
+    - k shape: (..., seq_len_k, depth)
+    - v shape: (..., seq_len_v, depth_v)
     """
     d_k = K.shape[-1]
 
@@ -41,7 +42,7 @@ class MultiheadAttention:
         model_size: int,
         key_size: Optional[int] = None,
         value_size: Optional[int] = None,
-        key: PRNGKey = jax.random.PRNGKey(0),
+        key: Optional[PRNGKey] = None,
     ) -> None:
         assert model_size % num_heads == 0
         self.num_heads = num_heads
@@ -49,6 +50,8 @@ class MultiheadAttention:
         self.key_size = key_size or model_size // num_heads
         self.value_size = value_size or self.key_size
         self.key = key
+        if self.key is None:
+            self.key = jax.random.PRNGKey(0)
 
         assert self.value_size is not None
 
