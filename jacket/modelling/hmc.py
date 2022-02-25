@@ -1,8 +1,10 @@
-from typing import Callable, Optional, Tuple
+from typing import Callable, Tuple
+
 import jax
 import jax.numpy as jnp
 from tqdm import tqdm
-from jacket.utils import tree_random_normal_like, tree_stack, Pytree
+
+from jacket.utils import Pytree, tree_random_normal_like, tree_stack
 
 
 def factor(

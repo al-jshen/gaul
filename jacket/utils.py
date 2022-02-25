@@ -1,5 +1,4 @@
-from typing import Iterable
-from typing import TypeVar
+from typing import Iterable, TypeVar
 
 import jax
 import jax.numpy as jnp
@@ -9,14 +8,16 @@ Pytree = TypeVar("Pytree")
 
 def tree_zeros_like(tree: Pytree) -> Pytree:
     """
-    Return a new tree with the same structure as t, but with all values set to 0.
+    Return a new tree with the same structure as t, but with all values set to
+    0.
     """
     return jax.tree_util.tree_map(lambda x: jnp.zeros_like(x), tree)
 
 
 def tree_ones_like(tree: Pytree) -> Pytree:
     """
-    Return a new tree with the same structure as t, but with all values set to 1.
+    Return a new tree with the same structure as t, but with all values set to
+    1.
     """
     return jax.tree_util.tree_map(lambda x: jnp.ones_like(x), tree)
 
@@ -32,7 +33,8 @@ def tree_split_keys_like(key, tree: Pytree) -> Pytree:
 
 def tree_random_normal_like(key, tree: Pytree) -> Pytree:
     """
-    Return a new tree with the same structure as t, but with all values set to random normal variates.
+    Return a new tree with the same structure as t, but with all values set to
+    random normal variates.
     """
     keys_tree = tree_split_keys_like(key, tree)
     return jax.tree_util.tree_multimap(
