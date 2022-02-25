@@ -1,7 +1,13 @@
+from typing import Callable
+
 import jax
 
+from jacket.utils import Pytree
 
-def sgd(fn, params, lr, niter, *args, **kwargs):
+
+def sgd(
+    fn: Callable, params: Pytree, lr: float = 1e-3, niter: int = 500, *args, **kwargs
+) -> Pytree:
     @jax.jit
     def update(params, *args, **kwargs):
         grads = jax.grad(fn)(params, *args, **kwargs)
