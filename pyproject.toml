@@ -31,11 +31,28 @@ ipywidgets = "^7.6.5"
 source = ["jacket", "*/site-packages"]
 
 [tool.coverage.run]
+parallel = true
 branch = true
 source = ["jacket"]
+omit = [
+  "docs/*",
+  "tests/*",
+  "*__init__*"
+]
 
 [tool.coverage.report]
 show_missing = true
+exclude_lines = [
+    "raise NotImplementedError",
+    "raise ImportError",
+    "except ImportError",
+    "def __len__",
+    "def __repr__",
+    "logging.warning",
+    "deprecation_warning",
+    "deprecated",
+    "if tqdm is None"
+]
 
 [tool.isort]
 profile = "black"

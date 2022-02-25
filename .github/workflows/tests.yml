@@ -1,4 +1,4 @@
-name: Jacket
+name: Tests
 
 on: 
   push: 
