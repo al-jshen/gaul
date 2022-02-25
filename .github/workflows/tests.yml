@@ -1,22 +1,22 @@
 name: Tests
 
-on: 
-  push: 
+on:
+  push:
     branches:
-      - '*' 
-    paths: 
+      - '*'
+    paths:
       - 'jacket/**'
       - 'tests/**'
       - 'examples/**'
 
-jobs: 
+jobs:
   tests:
     strategy:
       matrix:
         python-version: ["3.9"]
         os: [ ubuntu-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
-    steps: 
+    steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up Python

@@ -1,11 +1,11 @@
 coverage:
   round: down
-  status: 
+  status:
     project:
       default:
         target: 50%
         if_ci_failed: error
-    patch: 
+    patch:
       default:
         target: 50%
         if_ci_failed: error
