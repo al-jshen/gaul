@@ -117,6 +117,8 @@ def sample(
             (params_new, momentum_new),
             ln_posterior,
             subkey,
+            *args,
+            **kwargs,
         )
 
         if i >= n_warmup:
