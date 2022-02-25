@@ -4,6 +4,8 @@ from typing import Any, Callable, Iterable
 import jax
 import jax.numpy as jnp
 
+from jacket.types import PRNGKey
+
 
 class Sequential:
     def __init__(self, layers: Iterable[Callable[..., Any]]):
@@ -18,9 +20,12 @@ class Sequential:
 
 
 class Linear:
-    def __init__(self, input_size: int, output_size: int, key=None):
-        if key is None:
-            key = jax.random.PRNGKey(0)
+    def __init__(
+        self,
+        input_size: int,
+        output_size: int,
+        key: PRNGKey = jax.random.PRNGKey(0),
+    ):
         k1, k2 = jax.random.split(key)
         self.weights = jax.random.normal(k1, (input_size, output_size))
         self.bias = jax.random.normal(k2, (output_size,))
@@ -31,7 +36,13 @@ class Linear:
 
 
 class Dense(Linear):
-    def __init__(self, input_size: int, output_size: int, activation=None, key=None):
+    def __init__(
+        self,
+        input_size: int,
+        output_size: int,
+        activation=None,
+        key: PRNGKey = jax.random.PRNGKey(0),
+    ):
         super().__init__(input_size, output_size, key)
         self.input_size = input_size
         self.output_size = output_size
@@ -43,9 +54,9 @@ class Dense(Linear):
 
 
 class Dropout:
-    def __init__(self, p: float, key=None):
+    def __init__(self, p: float, key: PRNGKey = jax.random.PRNGKey(0)):
         self.p = jnp.clip(p, 0.0, 1.0)
-        self.key = jax.random.PRNGKey(0) if key is None else key
+        self.key = key
 
     def __call__(self, x, training=False):
         if training:
@@ -73,8 +84,8 @@ class LayerNorm:
 
 
 class Embedding:
-    def __init__(self, vocab_size, embedding_dim, key=None):
-        self.key = jax.random.PRNGKey(0) if key is None else key
+    def __init__(self, vocab_size, embedding_dim, key: PRNGKey = jax.random.PRNGKey(0)):
+        self.key = key
         self.embeddings = jax.random.normal(self.key, (vocab_size, embedding_dim))
 
     def __call__(self, x):

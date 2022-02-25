@@ -4,6 +4,7 @@ import jax.numpy as jnp
 
 from jacket.nn import attention
 from jacket.nn.utils import Dense, Dropout, Embedding, LayerNorm, Sequential
+from jacket.types import PRNGKey
 
 
 class EncoderLayer:
@@ -13,11 +14,11 @@ class EncoderLayer:
         num_heads: int,
         feedforward_size: int,
         dropout_rate=0.5,
-        key=None,
+        key: PRNGKey = jax.random.PRNGKey(0),
     ):
         self.model_size = model_size
         self.hidden_size = feedforward_size
-        self.key = jax.random.PRNGKey(0) if key is None else key
+        self.key = key
 
         k1, k2, k3, k4, k5 = jax.random.split(self.key, 5)
         self.mha = attention.MultiheadAttention(
@@ -37,7 +38,7 @@ class EncoderLayer:
         self.drop1 = Dropout(dropout_rate, key=k4)
         self.drop2 = Dropout(dropout_rate, key=k5)
 
-    def __call__(self, x, training=False, mask=None):
+    def __call__(self, x: jnp.ndarray, training=False, mask=None) -> jnp.ndarray:
         attn = self.mha(x, x, x, mask)
         attn = self.drop1(attn, training)
         attn = self.layernorm1(attn + x)
@@ -47,15 +48,15 @@ class EncoderLayer:
         return self.layernorm2(ffn + attn)
 
 
-def make_padding_mask(x):
+def make_padding_mask(x: jnp.ndarray) -> jnp.ndarray:
     return (x == 0).astype(jnp.float32).reshape(x.shape[0], 1, 1, -1)
 
 
-def make_look_ahead_mask(size: int):
+def make_look_ahead_mask(size: int) -> jnp.ndarray:
     return -jnp.tri(size) + 1.0
 
 
-def make_positional_encodings(n: int, d: int):
+def make_positional_encodings(n: int, d: int) -> jnp.ndarray:
     div_term = jnp.exp(jnp.arange(0, d, 2) * -(jnp.log(10000.0) / d))
     position = jnp.arange(n).reshape(-1, 1)
     pos_div = position * div_term
@@ -67,11 +68,15 @@ def make_positional_encodings(n: int, d: int):
 
 class DecoderLayer:
     def __init__(
-        self, model_size: int, num_heads: int, feedforward_size: int, key=None
+        self,
+        model_size: int,
+        num_heads: int,
+        feedforward_size: int,
+        key: PRNGKey = jax.random.PRNGKey(0),
     ):
         self.model_size = model_size
         self.hidden_size = feedforward_size
-        self.key = jax.random.PRNGKey(0) if key is None else key
+        self.key = key
 
         k1, k2, k3, k4, k5, k6, k7 = jax.random.split(self.key, 7)
         self.mha1 = attention.MultiheadAttention(
@@ -99,8 +104,13 @@ class DecoderLayer:
         self.drop3 = Dropout(0.1, key=k7)
 
     def __call__(
-        self, x, encoder_output, training=False, look_ahead_mask=None, padding_mask=None
-    ):
+        self,
+        x: jnp.ndarray,
+        encoder_output: jnp.ndarray,
+        training: bool = False,
+        look_ahead_mask=None,
+        padding_mask=None,
+    ) -> jnp.ndarray:
         attn1 = self.mha1(x, x, x, look_ahead_mask)
         attn1 = self.drop1(attn1, training)
         attn1 = self.layernorm1(attn1 + x)
@@ -123,14 +133,14 @@ class Encoder:
         feedforward_size: int,
         input_vocab_size: int,
         maximum_position_encoding: int,
-        dropout_rate=0.5,
-        key=None,
+        dropout_rate: float = 0.5,
+        key: PRNGKey = jax.random.PRNGKey(0),
     ):
         self.model_size = model_size
         self.num_layers = num_layers
         self.num_heads = num_heads
         self.feedforward_size = feedforward_size
-        self.key = jax.random.PRNGKey(0) if key is None else key
+        self.key = key
 
         self.embedding = Embedding(input_vocab_size, model_size)
         self.position_encoding = make_positional_encodings(
@@ -150,7 +160,7 @@ class Encoder:
 
         self.dropout = Dropout(dropout_rate, key=jax.random.split(self.key)[1])
 
-    def __call__(self, x, training=False, mask=None):
+    def __call__(self, x: jnp.ndarray, training=False, mask=None) -> jnp.ndarray:
         seq_len = x.shape[1]
         x = self.embedding(x)
         x = x * jnp.sqrt(self.model_size)
@@ -173,12 +183,12 @@ class Decoder:
         target_vocab_size: int,
         maximum_position_encoding: int,
         dropout_rate: float = 0.5,
-        key=None,
+        key: PRNGKey = jax.random.PRNGKey(0),
     ):
         self.model_size = model_size
         self.num_layers = num_layers
         self.num_heads = num_heads
-        self.key = jax.random.PRNGKey(0) if key is None else key
+        self.key = key
 
         self.embedding = Embedding(target_vocab_size, model_size)
         self.position_encoding = make_positional_encodings(
@@ -198,8 +208,13 @@ class Decoder:
         self.dropout = Dropout(dropout_rate, key=jax.random.split(self.key)[1])
 
     def __call__(
-        self, x, encoder_output, training=False, look_ahead_mask=None, padding_mask=None
-    ):
+        self,
+        x: jnp.ndarray,
+        encoder_output: jnp.ndarray,
+        training=False,
+        look_ahead_mask=None,
+        padding_mask=None,
+    ) -> jnp.ndarray:
         seq_len = x.shape[1]
         x = self.embedding(x)
         x = x * jnp.sqrt(self.model_size)
@@ -224,9 +239,9 @@ class Transformer:
         input_position_encoding: int,
         target_position_encoding: int,
         dropout_rate: float = 0.5,
-        key=None,
+        key: PRNGKey = jax.random.PRNGKey(0),
     ):
-        self.key = jax.random.PRNGKey(0) if key is None else key
+        self.key = key
         k1, k2, k3 = jax.random.split(self.key, 3)
         self.encoder = Encoder(
             model_size=model_size,
@@ -250,7 +265,7 @@ class Transformer:
         )
         self.final = Dense(model_size, target_vocab_size, activation=nn.relu, key=k3)
 
-    def __call__(self, x, y, training=False):
+    def __call__(self, x: jnp.ndarray, y: jnp.ndarray, training=False) -> jnp.ndarray:
         encoding_padding_mask = make_padding_mask(x)
         decoding_padding_mask = make_padding_mask(x)
         look_ahead_mask = make_look_ahead_mask(y.shape[1])

@@ -1,9 +1,9 @@
-from typing import Iterable, TypeVar
+from typing import Iterable
 
 import jax
 import jax.numpy as jnp
 
-Pytree = TypeVar("Pytree")
+from jacket.types import PRNGKey, Pytree
 
 
 def tree_zeros_like(tree: Pytree) -> Pytree:
@@ -22,7 +22,7 @@ def tree_ones_like(tree: Pytree) -> Pytree:
     return jax.tree_util.tree_map(lambda x: jnp.ones_like(x), tree)
 
 
-def tree_split_keys_like(key, tree: Pytree) -> Pytree:
+def tree_split_keys_like(key: PRNGKey, tree: Pytree) -> Pytree:
     """
     Split the key into multiple keys, one for each leaf of the tree.
     """
@@ -31,7 +31,7 @@ def tree_split_keys_like(key, tree: Pytree) -> Pytree:
     return jax.tree_util.tree_unflatten(treedef, keys)
 
 
-def tree_random_normal_like(key, tree: Pytree) -> Pytree:
+def tree_random_normal_like(key: PRNGKey, tree: Pytree) -> Pytree:
     """
     Return a new tree with the same structure as t, but with all values set to
     random normal variates.
