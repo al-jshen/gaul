@@ -1,22 +1,27 @@
+from typing import Iterable
+from typing import TypeVar
+
 import jax
 import jax.numpy as jnp
 
+Pytree = TypeVar("Pytree")
 
-def tree_zeros_like(tree):
+
+def tree_zeros_like(tree: Pytree) -> Pytree:
     """
     Return a new tree with the same structure as t, but with all values set to 0.
     """
     return jax.tree_util.tree_map(lambda x: jnp.zeros_like(x), tree)
 
 
-def tree_ones_like(tree):
+def tree_ones_like(tree: Pytree) -> Pytree:
     """
     Return a new tree with the same structure as t, but with all values set to 1.
     """
     return jax.tree_util.tree_map(lambda x: jnp.ones_like(x), tree)
 
 
-def tree_split_keys_like(key, tree):
+def tree_split_keys_like(key, tree: Pytree) -> Pytree:
     """
     Split the key into multiple keys, one for each leaf of the tree.
     """
@@ -25,7 +30,7 @@ def tree_split_keys_like(key, tree):
     return jax.tree_util.tree_unflatten(treedef, keys)
 
 
-def tree_random_normal_like(key, tree):
+def tree_random_normal_like(key, tree: Pytree) -> Pytree:
     """
     Return a new tree with the same structure as t, but with all values set to random normal variates.
     """
@@ -33,3 +38,10 @@ def tree_random_normal_like(key, tree):
     return jax.tree_util.tree_multimap(
         lambda l, k: jax.random.normal(k, l.shape, l.dtype), tree, keys_tree
     )
+
+
+def tree_stack(trees: Iterable[Pytree], axis: int = 0) -> Pytree:
+    """
+    Stack a list of trees along a given axis.
+    """
+    return jax.tree_util.tree_multimap(lambda *x: jnp.stack(x, axis=axis), *trees)
