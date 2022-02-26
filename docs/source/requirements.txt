@@ -1,3 +1,4 @@
 Sphinx
 sphinx-autodoc-typehints
 sphinx-book-theme
+myst-nb
