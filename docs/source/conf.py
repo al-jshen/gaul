@@ -70,7 +70,13 @@ html_static_path = ["_static"]
 
 # -- Other configuration options ----------------------------------------------
 
-myst_enable_extensions = ["dollarmath", "colon_fence"]
+myst_enable_extensions = [
+    "amsmath",
+    "dollarmath",
+    "html_image",
+    "replacements",
+    "smartquotes",
+]
 source_suffix = ".rst"
 master_doc = "index"
 jupyter_execute_notebooks = "off"
