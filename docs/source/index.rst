@@ -7,6 +7,12 @@ Gaul
 
    user/install
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Examples and Tutorials
+
+   examples/linreg.ipynb
+   examples/8schools.ipynb
 
 .. toctree::
    :maxdepth: 3

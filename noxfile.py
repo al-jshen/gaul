@@ -103,7 +103,7 @@ def docs(session):
     Build the docs for this package.
     """
     install_with_constraints(
-        session, "sphinx", "sphinx-book-theme", "sphinx-autodoc-typehints"
+        session, "sphinx", "sphinx-book-theme", "sphinx-autodoc-typehints", "myst-nb"
     )
     session.run("sphinx-build", "-b", "html", "docs/source", "docs/build/html")
 
