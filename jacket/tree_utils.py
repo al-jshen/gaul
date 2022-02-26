@@ -31,14 +31,16 @@ def tree_split_keys_like(key: PRNGKey, tree: Pytree) -> Pytree:
     return jax.tree_util.tree_unflatten(treedef, keys)
 
 
-def tree_random_normal_like(key: PRNGKey, tree: Pytree) -> Pytree:
+def tree_random_normal_like(key: PRNGKey, tree: Pytree, mean=0.0, std=1.0) -> Pytree:
     """
     Return a new tree with the same structure as t, but with all values set to
     random normal variates.
     """
     keys_tree = tree_split_keys_like(key, tree)
     return jax.tree_util.tree_multimap(
-        lambda l, k: jax.random.normal(k, l.shape, l.dtype), tree, keys_tree
+        lambda l, k: std * (jax.random.normal(k, l.shape, l.dtype) + mean),
+        tree,
+        keys_tree,
     )
 
 
