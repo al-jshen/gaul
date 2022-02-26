@@ -1,9 +1,16 @@
 version: 2
-sphinx:
-  configuration: docs/source/conf.py
-formats: all
+
+build:
+  os: ubuntu-20.04
+  tools:
+    python: "3.9"
+
 python:
-  version: 3.8
   install:
     - requirements: docs/source/requirements.txt
     - path: .
+
+sphinx:
+  configuration: docs/source/conf.py
+
+formats: all
