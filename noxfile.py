@@ -3,7 +3,7 @@ import tempfile
 
 import nox
 
-locations = "gaul", "tests", "noxfile.py"
+locations = "gaul", "tests", "noxfile.py", "docs/source/conf.py"
 nox.options.sessions = "lint", "tests", "docstrings"
 versions = ["3.9"]
 
@@ -25,7 +25,6 @@ def install_with_constraints(session, *args, **kwargs):
 @nox.session(python=versions)
 def tests(session):
     args = session.posargs or ["--cov", "-m", "not e2e"]
-    session.run("poetry", "install", "--no-dev", external=True)
     install_with_constraints(session, "coverage[toml]", "pytest", "pytest-cov")
     session.run("pytest", *args)
 
@@ -95,3 +94,23 @@ def coverage(session):
     install_with_constraints(session, "coverage[toml]", "codecov")
     session.run("coverage", "xml", "--fail-under=0")
     session.run("codecov", *session.posargs)
+
+
+@nox.session(python=versions)
+def docs(session):
+    """
+    Build the docs for this package.
+    """
+    install_with_constraints(
+        session, "sphinx", "sphinx-book-theme", "sphinx-autodoc-typehints"
+    )
+    session.run("sphinx-build", "-b", "html", "docs/source", "docs/build/html")
+
+
+@nox.session(python=versions)
+def autodoc(session):
+    """
+    Run sphinx-autodoc to generate documentation from docstrings.
+    """
+    install_with_constraints(session, "sphinx", "sphinx-autodoc-typehints")
+    session.run("sphinx-apidoc", "-o", "docs/source/user", "gaul")

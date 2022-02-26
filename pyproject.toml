@@ -28,6 +28,8 @@ corner = "^2.2.1"
 ipywidgets = "^7.6.5"
 docformatter = "^1.4"
 arviz = "^0.11.4"
+Sphinx = "^4.4.0"
+sphinx-autodoc-typehints = "^1.17.0"
 
 [tool.coverage.paths]
 source = ["gaul", "*/site-packages"]
