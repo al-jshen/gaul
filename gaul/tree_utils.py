@@ -3,7 +3,7 @@ from typing import Iterable
 import jax
 import jax.numpy as jnp
 
-from jacket.types import PRNGKey, Pytree
+from gaul.types import PRNGKey, Pytree
 
 
 def tree_zeros_like(tree: Pytree) -> Pytree:

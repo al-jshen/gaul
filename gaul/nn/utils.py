@@ -4,7 +4,7 @@ from typing import Any, Callable, Iterable, Optional
 import jax
 import jax.numpy as jnp
 
-from jacket.types import PRNGKey
+from gaul.types import PRNGKey
 
 
 class Sequential:

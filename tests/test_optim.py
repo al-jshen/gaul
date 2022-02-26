@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-import jacket.optim.optimizers as optimizers
+import gaul.optim.optimizers as optimizers
 
 
 class TestSGD:

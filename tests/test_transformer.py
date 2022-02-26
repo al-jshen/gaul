@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-from jacket.nn.transformer import Transformer
+from gaul.nn.transformer import Transformer
 
 num_heads = 8
 model_size = 256

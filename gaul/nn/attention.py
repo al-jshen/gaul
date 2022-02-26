@@ -5,8 +5,8 @@ import jax
 import jax.nn as nn
 import jax.numpy as jnp
 
-from jacket.nn.utils import Linear
-from jacket.types import PRNGKey
+from gaul.nn.utils import Linear
+from gaul.types import PRNGKey
 
 
 @jax.jit

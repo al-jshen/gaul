@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import jax.scipy.stats as stats
 
-from jacket.modelling import hmc
+from gaul.modelling import hmc
 
 
 class TestHMC:

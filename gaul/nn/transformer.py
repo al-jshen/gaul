@@ -4,9 +4,9 @@ import jax
 import jax.nn as nn
 import jax.numpy as jnp
 
-from jacket.nn import attention
-from jacket.nn.utils import Dense, Dropout, Embedding, LayerNorm, Sequential
-from jacket.types import PRNGKey
+from gaul.nn import attention
+from gaul.nn.utils import Dense, Dropout, Embedding, LayerNorm, Sequential
+from gaul.types import PRNGKey
 
 
 class EncoderLayer:

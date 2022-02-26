@@ -6,8 +6,8 @@ import jax.numpy as jnp
 from jax import lax
 from tqdm import tqdm
 
-from jacket.tree_utils import tree_random_normal_like, tree_stack
-from jacket.types import Pytree
+from gaul.tree_utils import tree_random_normal_like, tree_stack
+from gaul.types import Pytree
 
 
 @partial(jax.jit, static_argnums=(2,))
