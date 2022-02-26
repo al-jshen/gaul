@@ -4,14 +4,6 @@ gaul package
 Submodules
 ----------
 
-gaul.tree\_utils module
------------------------
-
-.. automodule:: gaul.tree_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 gaul.types module
 -----------------
 
