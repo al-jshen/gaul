@@ -1,14 +1,18 @@
 Gaul
 ================================
 
-
-User Guide
-----------
-
 .. toctree::
    :maxdepth: 2
+   :caption: User Guide
 
-   user/modules
+   user/install
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API documentation
+
+   user/gaul
 
 License
 -------

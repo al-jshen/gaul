@@ -114,4 +114,4 @@ def autodoc(session):
     Run sphinx-autodoc to generate documentation from docstrings.
     """
     install_with_constraints(session, "sphinx", "sphinx-autodoc-typehints")
-    session.run("sphinx-apidoc", "-o", "docs/source/user", "gaul")
+    session.run("sphinx-apidoc", "-f", "-o", "docs/source/user", "gaul")
