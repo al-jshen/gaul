@@ -7,6 +7,7 @@ license = "MIT"
 readme = "README.rst"
 homepage = "https://github.com/al-jshen/gaul"
 repository = "https://github.com/al-jshen/gaul"
+documentation = "https://gaul.readthedocs.io"
 keywords = ["jax"]
 
 [tool.poetry.dependencies]
