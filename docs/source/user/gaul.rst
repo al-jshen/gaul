@@ -1,7 +1,7 @@
 gaul package
 ============
 
-Subpackages
+Modules
 -----------
 
 .. toctree::
@@ -11,11 +11,4 @@ Subpackages
    gaul.nn
    gaul.optim
    gaul.utils
-
-gaul.types module
------------------
-
-.. automodule:: gaul.types
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   gaul.types

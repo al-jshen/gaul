@@ -1,9 +1,6 @@
 gaul.nn package
 ===============
 
-Submodules
-----------
-
 gaul.nn.attention module
 ------------------------
 
@@ -32,14 +29,6 @@ gaul.nn.utils module
 --------------------
 
 .. automodule:: gaul.nn.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: gaul.nn
    :members:
    :undoc-members:
    :show-inheritance:
