@@ -57,7 +57,7 @@ exclude_lines = [
 ]
 
 [tool.isort]
-profile = "black"
+profile = "google"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
