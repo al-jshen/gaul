@@ -10,14 +10,18 @@ from gaul.utils.pbar import progress_bar_scan
 from gaul.utils.tree_utils import tree_random_normal_like, tree_stack
 
 
-@partial(jax.jit, static_argnums=(2,))
-@partial(jax.vmap, in_axes=(0, 0, None))
+@partial(jax.jit, static_argnums=(2, 3))
+@partial(jax.vmap, in_axes=(0, 0, None, None))
 def factor(
     params: Pytree,
     momentum: Pytree,
     ln_posterior: Callable[..., float],
+    mass_matrix_fn: Callable,
 ) -> float:
-    m = jax.tree_util.tree_reduce(lambda acc, x: acc + x.T @ x, momentum, 0.0)
+    tree_momentum_mass = jax.tree_util.tree_multimap(
+        lambda x, ih: x.T @ ih @ x, momentum, mass_matrix_fn(params)
+    )
+    m = jax.tree_util.tree_reduce(lambda acc, x: acc + x, tree_momentum_mass, 0.0)
     return ln_posterior(params) - 0.5 * m
 
 
@@ -29,18 +33,19 @@ def select(mask, new, old):
     )
 
 
-@partial(jax.jit, static_argnums=(2,))
+@partial(jax.jit, static_argnums=(2, 3))
 def accept_reject(
     state_old: Tuple[Pytree, Pytree],
     state_new: Tuple[Pytree, Pytree],
     ln_posterior: Callable[..., float],
+    mass_matrix_fn: Callable,
     key,
 ) -> Tuple[Pytree, Pytree]:
     params_old, momentum_old = state_old
     params_new, momentum_new = state_new
 
-    factor_old = factor(params_old, momentum_old, ln_posterior)
-    factor_new = factor(params_new, momentum_new, ln_posterior)
+    factor_old = factor(params_old, momentum_old, ln_posterior, mass_matrix_fn)
+    factor_new = factor(params_new, momentum_new, ln_posterior, mass_matrix_fn)
     log_accept = factor_new - factor_old
     log_uniform = jnp.log(jax.vmap(jax.random.uniform)(key))
     accept_mask = log_uniform < log_accept
@@ -58,12 +63,16 @@ def leapfrog_step(
     momentum: Pytree,
     step_size: float,
     grad_fn: Callable,
+    mass_matrix_fn: Callable,
 ) -> Tuple[Pytree, Pytree]:
     momentum = jax.tree_util.tree_multimap(
         lambda m, g: m + g * 0.5 * step_size, momentum, grad_fn(params)
     )
     params = jax.tree_util.tree_multimap(
-        lambda p, m: p + m * step_size, params, momentum
+        lambda p, m, ih: p + ih @ m * step_size,
+        params,
+        momentum,
+        mass_matrix_fn(params),
     )
     momentum = jax.tree_util.tree_multimap(
         lambda m, g: m + g * 0.5 * step_size, momentum, grad_fn(params)
@@ -71,19 +80,26 @@ def leapfrog_step(
     return params, momentum
 
 
-@partial(jax.jit, static_argnums=(4,))
-@partial(jax.vmap, in_axes=(0, 0, None, None, None))
+@partial(
+    jax.jit,
+    static_argnums=(
+        4,
+        5,
+    ),
+)
+@partial(jax.vmap, in_axes=(0, 0, None, None, None, None))
 def leapfrog(
     params: Pytree,
     momentum: Pytree,
     n_steps: int,
     step_size: float,
     grad_fn: Callable,
+    mass_matrix_fn: Callable,
 ) -> Tuple[Pytree, Pytree]:
     return lax.fori_loop(
         0,
         n_steps,
-        lambda _, pm: leapfrog_step(pm[0], pm[1], step_size, grad_fn),
+        lambda _, pm: leapfrog_step(pm[0], pm[1], step_size, grad_fn, mass_matrix_fn),
         (params, momentum),
     )
 
@@ -124,8 +140,12 @@ def sample(
     params = tree_stack([init_params.copy() for _ in range(n_chains)])
     key, momentum_filler = generate_momentum(key, params)
 
-    @partial(jax.jit, static_argnums=(0, 1))
-    def step(ln_posterior, ln_posterior_grad, params, _, key):
+    @jax.jit
+    def mass_matrix_fn(params):
+        return jax.tree_util.tree_map(lambda x: jnp.eye(x.size), params)
+
+    @partial(jax.jit, static_argnums=(0, 1, 2))
+    def step(ln_posterior, ln_posterior_grad, mass_matrix_fn, params, _, key):
         key, momentum = generate_momentum(key, params)
 
         params_new, momentum_new = leapfrog(
@@ -134,6 +154,7 @@ def sample(
             leapfrog_steps,
             step_size,
             ln_posterior_grad,
+            mass_matrix_fn,
         )
 
         keys = jax.random.split(key, n_chains + 1)
@@ -142,6 +163,7 @@ def sample(
             (params, momentum),
             (params_new, momentum_new),
             ln_posterior,
+            mass_matrix_fn,
             keys[1:],
         )
         return (params, momentum, key)
@@ -149,7 +171,7 @@ def sample(
     @jax.jit
     def step_carry(carry, _):
         p, m, k = carry
-        p, m, k = step(ln_posterior, ln_posterior_grad, p, m, k)
+        p, m, k = step(ln_posterior, ln_posterior_grad, mass_matrix_fn, p, m, k)
         return (p, m, k), (p, m)
 
     warmup_pbar = progress_bar_scan(n_warmup, f"Running {n_warmup} warmup iterations:")

@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Callable, Iterable
 
 import jax
 import jax.numpy as jnp
@@ -49,3 +49,23 @@ def tree_stack(trees: Iterable[Pytree], axis: int = 0) -> Pytree:
     Stack a list of trees along a given axis.
     """
     return jax.tree_util.tree_multimap(lambda *x: jnp.stack(x, axis=axis), *trees)
+
+
+def make_tree_hessian(hess_fn: Callable) -> Callable:
+    """
+    Makes a function that computes a block diagonal Hessian of a function on a
+    tree. The blocks are organized into the same structure as the tree.
+
+    Args:
+        hess_fn: A function that takes a tree and returns a tree of Hessians.
+                 This can be made with, for example, jax.hessian(fn).
+    """
+
+    def tree_hessian(params):
+        treedef = jax.tree_util.tree_structure(params)
+        hessian = hess_fn(params)
+        hessian_leaves = [j[i] for i, j in hessian.items()]
+        hessian_tree = jax.tree_util.tree_unflatten(treedef, hessian_leaves)
+        return hessian_tree
+
+    return tree_hessian
