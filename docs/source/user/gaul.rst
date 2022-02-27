@@ -11,4 +11,5 @@ Modules
    gaul.nn
    gaul.optim
    gaul.utils
-   gaul.types
+
+.. automodule:: gaul.types
