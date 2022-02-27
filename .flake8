@@ -2,7 +2,7 @@
 select = B,B9,BLK,C,E,F,I,W,D
 max-complexity = 10
 max-line-length = 80
-ignore=W503,E501,BLK100,E731
+ignore=W503,E501,BLK100,E731,C901
 application-import-names = gaul,tests
 docstring-convention = google
 exclude=__pycache__,.ipynb_checkpoints
