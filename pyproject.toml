@@ -11,7 +11,7 @@ documentation = "https://gaul.readthedocs.io"
 keywords = ["jax"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.9,<3.11"
 jax = "^0.3.1"
 jaxlib = "^0.3.0"
 tqdm = "^4.62.3"
@@ -30,6 +30,8 @@ ipywidgets = "^7.6.5"
 docformatter = "^1.4"
 arviz = "^0.11.4"
 Sphinx = "^4.4.0"
+tensorflow = "^2.8.0"
+tbp-nightly = "^2.5.0-alpha.20210511"
 
 [tool.coverage.paths]
 source = ["gaul", "*/site-packages"]
