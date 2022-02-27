@@ -1,6 +1,10 @@
 Changelog
 ============
 
+0.2.1 (2022-02-27)
+++++++++++++++++++
+- Add mass matrix to HMC (just identity for now)
+
 0.2.0 (2022-02-26)
 ++++++++++++++++++
 - Rewrite HMC sampler
