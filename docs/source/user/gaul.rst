@@ -1,5 +1,5 @@
-gaul package
-============
+API Reference
+=============
 
 Modules
 -----------

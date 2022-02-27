@@ -16,9 +16,10 @@ Gaul
 
 .. toctree::
    :maxdepth: 3
-   :caption: API documentation
+   :caption: Notes
 
    user/gaul
+   changelog
 
 License
 -------
