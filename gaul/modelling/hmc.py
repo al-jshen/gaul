@@ -4,9 +4,9 @@ from typing import Callable, Tuple
 import jax
 import jax.numpy as jnp
 from jax import lax
-from tqdm import tqdm
 
-from gaul.types import Pytree
+from gaul.types import PRNGKey, Pytree
+from gaul.utils.pbar import progress_bar_scan
 from gaul.utils.tree_utils import tree_random_normal_like, tree_stack
 
 
@@ -89,12 +89,17 @@ def leapfrog(
 
 
 @jax.jit
-def generate_momentum(key, tree):
+def generate_momentum(key: PRNGKey, tree: Pytree) -> Tuple[PRNGKey, Pytree]:
     key, subkey = jax.random.split(key)
     momentum = tree_random_normal_like(subkey, tree)
     return key, momentum
 
 
+def transpose_samples(samples: Pytree, shape: Tuple[int, ...]) -> Pytree:
+    return jax.tree_util.tree_map(lambda x: x.transpose(*shape), samples)
+
+
+@partial(jax.jit, static_argnums=(0, 2, 5, 6))
 def sample(
     ln_posterior: Callable[..., float],
     init_params: Pytree,
@@ -104,19 +109,23 @@ def sample(
     n_samples: int = 1000,
     n_warmup: int = 1000,
     key=None,
+    *args,
+    **kwargs,
 ) -> Tuple[Pytree, Pytree]:
+
+    print("Compiling...")
+
     if key is None:
         key = jax.random.PRNGKey(0)
 
-    samples = []
-    samples_momentum = []
-
+    ln_posterior = jax.jit(partial(ln_posterior, *args, **kwargs))
     ln_posterior_grad = jax.jit(jax.grad(ln_posterior))
 
     params = tree_stack([init_params.copy() for _ in range(n_chains)])
+    key, momentum_filler = generate_momentum(key, params)
 
-    for i in tqdm(range(n_samples + n_warmup)):
-
+    @partial(jax.jit, static_argnums=(0, 1))
+    def step(ln_posterior, ln_posterior_grad, params, _, key):
         key, momentum = generate_momentum(key, params)
 
         params_new, momentum_new = leapfrog(
@@ -135,9 +144,25 @@ def sample(
             ln_posterior,
             keys[1:],
         )
+        return (params, momentum, key)
 
-        if i >= n_warmup:
-            samples.append(params)
-            samples_momentum.append(momentum)
+    @jax.jit
+    def step_carry(carry, _):
+        p, m, k = carry
+        p, m, k = step(ln_posterior, ln_posterior_grad, p, m, k)
+        return (p, m, k), (p, m)
 
-    return tree_stack(samples, -1), tree_stack(samples_momentum, -1)
+    warmup_pbar = progress_bar_scan(n_warmup, f"Running {n_warmup} warmup iterations:")
+    sample_pbar = progress_bar_scan(
+        n_samples, f"Running {n_samples} sampling iterations:"
+    )
+
+    carry = (params, momentum_filler, key)
+
+    carry, _ = lax.scan(warmup_pbar(step_carry), carry, jnp.arange(n_warmup))
+
+    _, params_momentum = lax.scan(sample_pbar(step_carry), carry, jnp.arange(n_samples))
+
+    samples, momentum = params_momentum
+
+    return transpose_samples(samples, (1, 2, 0)), transpose_samples(momentum, (1, 2, 0))
