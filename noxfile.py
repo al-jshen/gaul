@@ -4,7 +4,7 @@ import tempfile
 import nox
 
 locations = "gaul", "tests", "noxfile.py", "docs/source/conf.py"
-nox.options.sessions = "lint", "tests", "docstrings", "docs"
+nox.options.sessions = "lint", "tests", "docstrings"
 versions = ["3.9"]
 
 
