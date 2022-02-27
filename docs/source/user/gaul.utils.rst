@@ -1,6 +1,14 @@
 gaul.utils package
 ==================
 
+gaul.utils.pbar module
+----------------------
+
+.. automodule:: gaul.utils.pbar
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 gaul.utils.tree\_utils module
 -----------------------------
 
