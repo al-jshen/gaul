@@ -7,7 +7,7 @@ from jax import lax
 
 from gaul.types import PRNGKey, Pytree
 from gaul.utils.pbar import progress_bar_scan
-from gaul.utils.tree_utils import tree_random_normal_like, tree_stack
+from gaul.utils.tree_utils import tree_random_normal_like
 
 
 @partial(jax.jit, static_argnums=(2, 3))
@@ -137,7 +137,9 @@ def sample(
     ln_posterior = jax.jit(partial(ln_posterior, *args, **kwargs))
     ln_posterior_grad = jax.jit(jax.grad(ln_posterior))
 
-    params = tree_stack([init_params.copy() for _ in range(n_chains)])
+    params = jax.tree_util.tree_map(
+        lambda x: jnp.repeat(x, n_chains).reshape(n_chains, *x.shape), init_params
+    )
     key, momentum_filler = generate_momentum(key, params)
 
     @jax.jit

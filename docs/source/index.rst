@@ -1,6 +1,27 @@
 Gaul
 ================================
 
+Quickstart
+-----------
+
+To sample 100 chains from a 10D Gaussian:
+
+.. code-block:: python
+
+    import jax.numpy as jnp
+    import jax.scipy.stats as stats
+    from gaul.modelling import hmc
+
+    def ln_posterior(params):
+        return stats.norm.logpdf(params).sum()
+
+    params = jnp.zeros(10)
+    samples = hmc.sample(ln_posterior, params, n_chains=100, step_size=0.2)
+
+
+Documentation
+-------------
+
 .. toctree::
    :maxdepth: 2
    :caption: User Guide
