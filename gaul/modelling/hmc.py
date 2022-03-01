@@ -65,7 +65,7 @@ def accept_reject(
     params = select(accept_mask, params_new, params_old)
     momentum = select(accept_mask, flipped_momentum_new, momentum_old)
 
-    return params, momentum
+    return params, momentum, log_accept
 
 
 def leapfrog_step(
@@ -131,7 +131,8 @@ def sample(
     init_params: Pytree,
     n_chains: int = 4,
     leapfrog_steps: int = 10,
-    step_size: float = 1e-3,
+    # step_size: float = 1e-3,
+    delta: float = 0.65,
     n_samples: int = 1000,
     n_warmup: int = 1000,
     key=None,
@@ -156,8 +157,27 @@ def sample(
     def mass_matrix_fn(params):
         return jax.tree_util.tree_map(lambda x: jnp.eye(x.size), params)
 
+    e0 = find_reasonable_epsilon(
+        params, ln_posterior, ln_posterior_grad, mass_matrix_fn, key
+    )
+    loge = jnp.log(e0)
+    mu = jnp.log(10.0 * e0)
+    logebar = 0.0  # ebar = 1
+    hbar = 0.0
+    gamma = 0.05
+    t0 = 10.0
+    kappa = 0.75
+
     @partial(jax.jit, static_argnums=(0, 1, 2))
-    def step(ln_posterior, ln_posterior_grad, mass_matrix_fn, params, _, key):
+    def step(
+        ln_posterior,
+        ln_posterior_grad,
+        mass_matrix_fn,
+        params,
+        momentum,
+        step_size,
+        key,
+    ):
         key, momentum = generate_momentum(key, params)
 
         params_new, momentum_new = leapfrog(
@@ -171,29 +191,59 @@ def sample(
 
         keys = jax.random.split(key, n_chains + 1)
         key = keys[0]
-        params, momentum = accept_reject(
+        params, momentum, log_accept = accept_reject(
             (params, momentum),
             (params_new, momentum_new),
             ln_posterior,
             mass_matrix_fn,
             keys[1:],
         )
-        return (params, momentum, key)
+        return (params, momentum, log_accept, key)
+
+    @jax.jit
+    def adapt_stepsize(m, loge, logebar, hbar, alpha):
+        w = 1.0 / (m + t0)
+        hbar = (1.0 - w) * hbar + w * (delta - alpha)
+        loge = mu - jnp.sqrt(m) / gamma * hbar
+        mnk = jnp.power(m, -kappa)
+        logebar = mnk * loge + (1.0 - mnk) * logebar
+        return loge, logebar, hbar
+
+    @jax.jit
+    def warmup_step_carry(carry, m):
+        p, m, k, loge, logebar, hbar = carry
+        p, m, log_accept, k = step(
+            ln_posterior, ln_posterior_grad, mass_matrix_fn, p, m, jnp.exp(loge), k
+        )
+        alpha = jnp.clip(jnp.exp(log_accept), a_max=1.0)
+        loge, logebar, hbar = adapt_stepsize(m, loge, logebar, hbar, alpha)
+        return (p, m, k, loge, logebar, hbar)
+
+    warmup_pbar = progress_bar_scan(n_warmup, f"Running {n_warmup} warmup iterations:")
+
+    warmup_carry = (params, momentum_filler, key, loge, logebar, hbar)
+
+    warmup_carry, _ = lax.scan(
+        warmup_pbar(warmup_step_carry), warmup_carry, jnp.arange(n_warmup)
+    )
+
+    params, momentum, key, loge, logebar, hbar = warmup_carry
+
+    adapted_step_size = jnp.exp(loge)
+
+    carry = (params, momentum, key)
 
     @jax.jit
     def step_carry(carry, _):
         p, m, k = carry
-        p, m, k = step(ln_posterior, ln_posterior_grad, mass_matrix_fn, p, m, k)
+        p, m, _, k = step(
+            ln_posterior, ln_posterior_grad, mass_matrix_fn, p, m, adapted_step_size, k
+        )
         return (p, m, k), (p, m)
 
-    warmup_pbar = progress_bar_scan(n_warmup, f"Running {n_warmup} warmup iterations:")
     sample_pbar = progress_bar_scan(
         n_samples, f"Running {n_samples} sampling iterations:"
     )
-
-    carry = (params, momentum_filler, key)
-
-    carry, _ = lax.scan(warmup_pbar(step_carry), carry, jnp.arange(n_warmup))
 
     _, params_momentum = lax.scan(sample_pbar(step_carry), carry, jnp.arange(n_samples))
 
