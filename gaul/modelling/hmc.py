@@ -25,6 +25,18 @@ def factor(
     return ln_posterior(params) - 0.5 * m
 
 
+@partial(jax.jit, static_argnums=(2, 3))
+def log_accept_ratio(
+    state_old: Tuple[Pytree, Pytree],
+    state_new: Tuple[Pytree, Pytree],
+    ln_posterior: Callable[..., float],
+    mass_matrix_fn: Callable,
+) -> float:
+    factor_old = factor(*state_old, ln_posterior, mass_matrix_fn)
+    factor_new = factor(*state_new, ln_posterior, mass_matrix_fn)
+    return factor_new - factor_old
+
+
 @jax.jit
 @jax.vmap
 def select(mask, new, old):
@@ -44,9 +56,7 @@ def accept_reject(
     params_old, momentum_old = state_old
     params_new, momentum_new = state_new
 
-    factor_old = factor(params_old, momentum_old, ln_posterior, mass_matrix_fn)
-    factor_new = factor(params_new, momentum_new, ln_posterior, mass_matrix_fn)
-    log_accept = factor_new - factor_old
+    log_accept = log_accept_ratio(state_old, state_new, ln_posterior, mass_matrix_fn)
     log_uniform = jnp.log(jax.vmap(jax.random.uniform)(key))
     accept_mask = log_uniform < log_accept
 
@@ -190,3 +200,44 @@ def sample(
     samples, momentum = params_momentum
 
     return transpose_samples(samples, (1, 2, 0)), transpose_samples(momentum, (1, 2, 0))
+
+
+def find_reasonable_epsilon(
+    params: Pytree,
+    ln_posterior: Callable[..., float],
+    grad_fn: Callable,
+    mass_matrix_fn: Callable,
+    key: PRNGKey,
+):
+    eps = 1.0
+    key, momentum = generate_momentum(key, params)
+    params_new, momentum_new = leapfrog_step(
+        params, momentum, eps, grad_fn, mass_matrix_fn
+    )
+    log_accept = log_accept_ratio(
+        (params, momentum), (params_new, momentum_new), ln_posterior, mass_matrix_fn
+    )
+    a = 1.0 if log_accept > jnp.log(0.5) else -1.0
+
+    @jax.jit
+    def body_fun(state):
+        # eps, log_accept = state
+        eps, _ = state
+        eps = jnp.power(2.0, a) * eps
+        params_new, momentum_new = leapfrog_step(
+            params, momentum, eps, grad_fn, mass_matrix_fn
+        )
+        log_accept = log_accept_ratio(
+            (params, momentum), (params_new, momentum_new), ln_posterior, mass_matrix_fn
+        )
+        return (eps, log_accept)
+
+    @jax.jit
+    def cond_fun(state):
+        # eps, log_accept = state
+        _, log_accept = state
+        return a * log_accept > -a * jnp.log(2.0)
+
+    state = lax.while_loop(cond_fun, body_fun, (eps, -a * jnp.log(2.0) + 1.0))
+
+    return state[0]
