@@ -5,7 +5,7 @@ import nox
 
 locations = "gaul", "tests", "noxfile.py", "docs/source/conf.py"
 nox.options.sessions = "lint", "tests", "docstrings"
-versions = ["3.9"]
+versions = ["3.9", "3.10"]
 
 
 def install_with_constraints(session, *args, **kwargs):
