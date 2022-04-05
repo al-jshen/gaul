@@ -9,6 +9,14 @@ gaul.hmc module
    :undoc-members:
    :show-inheritance:
 
+gaul.quap module
+----------------
+
+.. automodule:: gaul.quap
+   :members: 
+   :undoc-members:
+   :show-inheritance:
+
 gaul.utils.pbar module
 ----------------------
 

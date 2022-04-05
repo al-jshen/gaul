@@ -47,6 +47,6 @@ def sample(
         rng, params_flat, hessian_inv, shape=(nsamples,)
     )
     samples = jax.vmap(params_ravel)(samples)
-    samples = jax.tree_util.tree_map(lambda x: x.reshape(1, -1, nsamples), samples)
+    samples = jax.tree_util.tree_map(lambda x: x.reshape(-1, nsamples), samples)
 
     return samples
