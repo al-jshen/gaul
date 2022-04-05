@@ -10,7 +10,7 @@ To sample 100 chains from a 10D Gaussian:
 
     import jax.numpy as jnp
     import jax.scipy.stats as stats
-    from gaul.modelling import hmc
+    from gaul import hmc
 
     def ln_posterior(params):
         return stats.norm.logpdf(params).sum()

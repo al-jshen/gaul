@@ -1,15 +1,27 @@
 API Reference
 =============
 
-Modules
------------
+gaul.hmc module
+---------------
 
-.. toctree::
-   :maxdepth: 4
+.. automodule:: gaul.hmc
+   :members: 
+   :undoc-members:
+   :show-inheritance:
 
-   gaul.modelling
-   gaul.nn
-   gaul.optim
-   gaul.utils
+gaul.utils.pbar module
+----------------------
 
-.. automodule:: gaul.types
+.. automodule:: gaul.utils.pbar
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gaul.utils.tree\_utils module
+-----------------------------
+
+.. automodule:: gaul.utils.tree_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
