@@ -1,3 +1,5 @@
+from typing import Callable
+
 import jax
 import jax.example_libraries.optimizers as optimizers
 import jax.numpy as jnp
@@ -5,19 +7,21 @@ import jax.random as random
 from jax import lax
 from jax.flatten_util import ravel_pytree
 
+from gaul.types import PRNGKey, Pytree
 from gaul.utils.pbar import progress_bar_scan
+from gaul.utils.tree_utils import dense_hessian
 
 
-def quap(
-    ln_posterior,
-    params,
-    opt=optimizers.adam(1e-3),
-    nsteps=5000,
-    nsamples=1000,
-    rng=random.PRNGKey(0),
+def sample(
+    ln_posterior: Callable,
+    params: Pytree,
+    opt: optimizers.Optimizer = optimizers.adam(1e-3),
+    nsteps: int = 5000,
+    nsamples: int = 1000,
+    rng: PRNGKey = random.PRNGKey(0),
     *args,
     **kwargs,
-):
+) -> jnp.ndarray:
     opt_init, opt_update, get_params = opt
     opt_state = opt_init(params)
 
@@ -34,11 +38,8 @@ def quap(
     opt_state, _ = lax.scan(pbar(update), opt_state, jnp.arange(nsteps))
     params = get_params(opt_state)
 
-    hessian = jax.hessian(neg_ln_posterior)(params)
-    hessian_flat, _ = ravel_pytree(hessian)
-
-    n = int(jnp.sqrt(hessian_flat.size))
-    hessian_inv = jnp.linalg.inv(hessian_flat.reshape(n, n))
+    hessian = dense_hessian(neg_ln_posterior, params)
+    hessian_inv = jnp.linalg.inv(hessian)
 
     params_flat, params_ravel = ravel_pytree(params)
 
@@ -46,6 +47,6 @@ def quap(
         rng, params_flat, hessian_inv, shape=(nsamples,)
     )
     samples = jax.vmap(params_ravel)(samples)
-    samples = jax.tree_util.tree_map(lambda x: x.reshape(-1, nsamples), samples)
+    samples = jax.tree_util.tree_map(lambda x: x.reshape(1, -1, nsamples), samples)
 
     return samples
