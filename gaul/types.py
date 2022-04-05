@@ -1,8 +1,7 @@
 from jax._src.prng import PRNGKeyArray
+from typing import Any
 
 
-class Pytree:
-    pass
-
+Pytree = Any
 
 PRNGKey = PRNGKeyArray
