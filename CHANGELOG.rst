@@ -1,6 +1,10 @@
 Changelog
 ============
 
+0.3.0 (2022-04-05)
+++++++++++++++++++
+- Add quadratic/Laplace approximation implementation
+
 0.2.2 (2022-04-05)
 ++++++++++++++++++
 - Restructure repository
