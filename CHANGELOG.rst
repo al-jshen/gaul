@@ -1,6 +1,11 @@
 Changelog
 ============
 
+0.2.2 (2022-04-05)
+++++++++++++++++++
+- Restructure repository
+- Nuke ``nn`` and ``optim`` modules
+
 0.2.1 (2022-02-27)
 ++++++++++++++++++
 - Add mass matrix to HMC (just identity for now)
