@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Callable, Iterable
 
 import jax
@@ -69,3 +70,21 @@ def make_tree_hessian(hess_fn: Callable) -> Callable:
         return hessian_tree
 
     return tree_hessian
+
+
+# @partial(jax.jit, static_argnums=(0,))
+def dense_hessian(
+    ln_posterior: Callable, params: Pytree, *args, **kwargs
+) -> jnp.ndarray:
+    def flatten(v):
+        def f(v):
+            leaves, _ = jax.tree_util.tree_flatten(v)
+            return jnp.concatenate([x.ravel() for x in leaves])
+
+        out, pullback = jax.vjp(f, v)
+        return out, lambda x: pullback(x)[0]
+
+    flat_params, unflatten = flatten(params)
+    return jax.hessian(lambda p: ln_posterior(unflatten(p), *args, **kwargs))(
+        flat_params
+    )
