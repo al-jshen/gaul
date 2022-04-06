@@ -71,7 +71,6 @@ def make_tree_hessian(hess_fn: Callable) -> Callable:
     return tree_hessian
 
 
-# @partial(jax.jit, static_argnums=(0,))
 def dense_hessian(
     ln_posterior: Callable, params: Pytree, *args, **kwargs
 ) -> jnp.ndarray:
