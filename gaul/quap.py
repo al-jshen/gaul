@@ -1,4 +1,5 @@
-from typing import Callable
+from collections import OrderedDict
+from typing import Callable, Optional
 
 import jax
 import jax.example_libraries.optimizers as optimizers
@@ -15,13 +16,24 @@ from gaul.utils.tree_utils import dense_hessian
 def sample(
     ln_posterior: Callable,
     params: Pytree,
-    opt: optimizers.Optimizer = optimizers.adam(1e-3),
     nsteps: int = 5000,
-    nsamples: int = 1000,
+    nsamples: int = 2000,
     rng: PRNGKey = random.PRNGKey(0),
+    opt: Optional[optimizers.Optimizer] = None,
+    lr: Optional[float] = None,
     *args,
     **kwargs,
-) -> jnp.ndarray:
+) -> Pytree:
+
+    if isinstance(params, dict):
+        params = OrderedDict(params)
+
+    if not opt:
+        if lr:
+            opt = optimizers.adam(lr)
+        else:
+            opt = optimizers.adam(1e-2)
+
     opt_init, opt_update, get_params = opt
     opt_state = opt_init(params)
 
