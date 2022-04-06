@@ -2,10 +2,10 @@ import jax
 import jax.numpy as jnp
 import jax.scipy.stats as stats
 
-from gaul import quap
+from gaul import advi
 
 
-class TestQuap:
+class TestADVI:
     def test_mvn(self):
         @jax.jit
         def ln_posterior(params):
@@ -16,7 +16,7 @@ class TestQuap:
 
         params = dict(x=jnp.ones(n_dims))
 
-        samples = quap.sample(ln_posterior, params, nsteps=10000, nsamples=n_samples)
+        samples = advi.sample(ln_posterior, params, nsteps=10000, nsamples=n_samples)
 
         x_samples = samples["x"]
 
