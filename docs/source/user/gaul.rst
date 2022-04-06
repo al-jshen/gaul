@@ -5,7 +5,7 @@ gaul.hmc module
 ---------------
 
 .. automodule:: gaul.hmc
-   :members: 
+   :members:
    :undoc-members:
    :show-inheritance:
 
@@ -13,7 +13,15 @@ gaul.quap module
 ----------------
 
 .. automodule:: gaul.quap
-   :members: 
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gaul.advi module
+----------------
+
+.. automodule:: gaul.advi
+   :members:
    :undoc-members:
    :show-inheritance:
 
@@ -32,4 +40,3 @@ gaul.utils.tree\_utils module
    :members:
    :undoc-members:
    :show-inheritance:
-

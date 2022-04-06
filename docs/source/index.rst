@@ -1,23 +1,40 @@
 Gaul
-================================
+======
 
 Quickstart
 -----------
 
-To sample 100 chains from a 10D Gaussian:
+To sample from a 10 dimensional Gaussian with HMC, ADVI, or Laplace/quadratic approximation:
 
 .. code-block:: python
 
     import jax.numpy as jnp
     import jax.scipy.stats as stats
-    from gaul import hmc
+
+    from gaul import hmc, advi, quap
 
     def ln_posterior(params):
         return stats.norm.logpdf(params).sum()
 
     params = jnp.zeros(10)
-    samples = hmc.sample(ln_posterior, params, n_chains=100, step_size=0.2)
 
+    samples_hmc = hmc.sample(
+      ln_posterior,
+      params,
+      step_size=0.2
+      n_chains=1000, # yes, that's 1000 parallel chains
+      n_warmup=1000,
+      n_samples=100
+    )
+
+    samples_advi = advi.sample(
+      ln_posterior,
+      params,
+      lr=0.2,
+      n_steps=1000,
+    )
+
+    samples_quap = quap.sample(ln_posterior, params)
 
 Documentation
 -------------
@@ -34,6 +51,7 @@ Documentation
 
    examples/linreg.ipynb
    examples/8schools.ipynb
+   examples/autoregressive.ipynb
 
 .. toctree::
    :maxdepth: 3
