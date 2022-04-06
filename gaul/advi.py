@@ -86,7 +86,8 @@ def sample(
         gradient = jax.grad(objective)(vi_params, i)
         return opt_update(i, gradient, opt_state)
 
-    for i in (pbar := tqdm(range(n_steps))):
+    pbar = tqdm(range(n_steps))
+    for i in pbar:
         opt_state = update(opt_state, i)
         vi_params = get_params(opt_state)
         if i % (n_steps // 20) == 0:
