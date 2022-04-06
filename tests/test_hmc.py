@@ -17,7 +17,7 @@ class TestHMC:
 
         params = dict(x=jnp.ones(n_dims))
 
-        samples, momentum = hmc.sample(
+        samples = hmc.sample(
             ln_posterior, params, n_chains=n_chains, n_samples=n_samples, step_size=1e-2
         )
 

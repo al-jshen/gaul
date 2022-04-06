@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Union
 
 import jax
 import jax.numpy as jnp
@@ -124,15 +124,13 @@ def sample(
     step_size: float = 1e-3,
     n_samples: int = 1000,
     n_warmup: int = 1000,
-    key=None,
+    key: PRNGKey = jax.random.PRNGKey(0),
+    return_momentum: bool = False,
     *args,
     **kwargs,
-) -> Tuple[Pytree, Pytree]:
+) -> Union[Pytree, Tuple[Pytree, Pytree]]:
 
     print("Compiling...")
-
-    if key is None:
-        key = jax.random.PRNGKey(0)
 
     ln_posterior = jax.jit(partial(ln_posterior, *args, **kwargs))
     ln_posterior_grad = jax.jit(jax.grad(ln_posterior))
@@ -189,4 +187,10 @@ def sample(
 
     samples, momentum = params_momentum
 
-    return transpose_samples(samples, (1, 2, 0)), transpose_samples(momentum, (1, 2, 0))
+    if return_momentum:
+        return (
+            transpose_samples(samples, (1, 2, 0)),
+            transpose_samples(momentum, (1, 2, 0)),
+        )
+
+    return transpose_samples(samples, (1, 2, 0))
