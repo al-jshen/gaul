@@ -1,6 +1,12 @@
 Changelog
 ============
 
+0.4.1 (2022-04-06)
+++++++++++++++++++
+- Lower minimum Python version to 3.7.1
+- Make sampling interfaces more consistent
+- Add more documentation
+
 0.4.0 (2022-04-05)
 ++++++++++++++++++
 - Add mean-field variational inference
