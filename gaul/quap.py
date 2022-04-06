@@ -16,8 +16,8 @@ from gaul.utils.tree_utils import dense_hessian
 def sample(
     ln_posterior: Callable,
     params: Pytree,
-    nsteps: int = 5000,
-    nsamples: int = 2000,
+    n_steps: int = 5000,
+    n_samples: int = 2000,
     rng: PRNGKey = random.PRNGKey(0),
     opt: Optional[optimizers.Optimizer] = None,
     lr: Optional[float] = None,
@@ -45,9 +45,9 @@ def sample(
         gradient = jax.grad(neg_ln_posterior)(params)
         return opt_update(i, gradient, opt_state), None
 
-    pbar = progress_bar_scan(nsteps, f"Running {nsteps} optimization steps")
+    pbar = progress_bar_scan(n_steps, f"Running {n_steps} optimization steps")
 
-    opt_state, _ = lax.scan(pbar(update), opt_state, jnp.arange(nsteps))
+    opt_state, _ = lax.scan(pbar(update), opt_state, jnp.arange(n_steps))
     params = get_params(opt_state)
 
     hessian = dense_hessian(neg_ln_posterior, params)
@@ -56,9 +56,9 @@ def sample(
     params_flat, params_ravel = ravel_pytree(params)
 
     samples = random.multivariate_normal(
-        rng, params_flat, hessian_inv, shape=(nsamples,)
+        rng, params_flat, hessian_inv, shape=(n_samples,)
     )
     samples = jax.vmap(params_ravel)(samples)
-    samples = jax.tree_util.tree_map(lambda x: x.reshape(-1, nsamples), samples)
+    samples = jax.tree_util.tree_map(lambda x: x.reshape(-1, n_samples), samples)
 
     return samples

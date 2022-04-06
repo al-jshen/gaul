@@ -47,8 +47,8 @@ def batch_elbo(ln_prob: Callable, rng: PRNGKey, vi_params: Any, nsamples: int) -
 def sample(
     ln_posterior: Callable,
     params: Pytree,
-    nsteps: int = 10000,
-    nsamples: int = 2000,
+    n_steps: int = 10000,
+    n_samples: int = 2000,
     rng: PRNGKey = random.PRNGKey(0),
     opt: Optional[optimizers.Optimizer] = None,
     lr: Optional[float] = None,
@@ -78,7 +78,7 @@ def sample(
     @jax.jit
     def objective(vi_params, t):
         rng = random.PRNGKey(t)
-        return -batch_elbo(ln_prob, rng, vi_params, nsamples)
+        return -batch_elbo(ln_prob, rng, vi_params, n_samples)
 
     @jax.jit
     def update(opt_state, i):
@@ -86,14 +86,14 @@ def sample(
         gradient = jax.grad(objective)(vi_params, i)
         return opt_update(i, gradient, opt_state)
 
-    for i in (pbar := tqdm(range(nsteps))):
+    for i in (pbar := tqdm(range(n_steps))):
         opt_state = update(opt_state, i)
         vi_params = get_params(opt_state)
-        if i % (nsteps // 20) == 0:
+        if i % (n_steps // 20) == 0:
             pbar.set_description(f"ELBO: {-objective(vi_params, i):.2e}")
 
-    rngs = random.split(rng, nsamples)
+    rngs = random.split(rng, n_samples)
     samples = jax.vmap(diag_gaussian_sample, in_axes=(0, None, None))(rngs, *vi_params)
-    samples = jax.tree_util.tree_map(lambda x: x.reshape(-1, nsamples), samples)
+    samples = jax.tree_util.tree_map(lambda x: x.reshape(-1, n_samples), samples)
 
     return samples

@@ -16,7 +16,7 @@ class TestADVI:
 
         params = dict(x=jnp.ones(n_dims))
 
-        samples = advi.sample(ln_posterior, params, nsteps=10000, nsamples=n_samples)
+        samples = advi.sample(ln_posterior, params, n_steps=10000, n_samples=n_samples)
 
         x_samples = samples["x"]
 
