@@ -1,6 +1,10 @@
 Changelog
 ============
 
+0.4.0 (2022-04-05)
+++++++++++++++++++
+- Add mean-field variational inference
+
 0.3.0 (2022-04-05)
 ++++++++++++++++++
 - Add quadratic/Laplace approximation implementation
