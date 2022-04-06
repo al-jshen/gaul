@@ -28,6 +28,7 @@ jobs:
         uses: Gr1N/setup-poetry@v7
         with:
           poetry-preview: true
+      - name: Check Poetry version
         run: poetry --version
       - name: Set up Nox
         run: pip3 install nox==2022.1.7
