@@ -9,3 +9,4 @@ build
 coverage.xml
 Untitled*.ipynb
 *Copy*.ipynb
+.coverage.mbp*
