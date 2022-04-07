@@ -1,4 +1,3 @@
-__version__ = "0.2.1"
 __uri__ = "http://github.com/al-jshen/gaul"
 __author__ = "Jeff Shen"
 __email__ = "jshen2014@hotmail.com"

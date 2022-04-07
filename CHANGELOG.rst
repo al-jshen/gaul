@@ -1,6 +1,11 @@
 Changelog
 ============
 
+0.4.2 (2022-04-07)
+++++++++++++++++++
+- Fix progress bar compatibility in ADVI code
+- Add more documentation and infrastructure
+
 0.4.1 (2022-04-06)
 ++++++++++++++++++
 - Lower minimum Python version to 3.7.1
