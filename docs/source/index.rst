@@ -52,6 +52,7 @@ Documentation
    examples/linreg.ipynb
    examples/8schools.ipynb
    examples/autoregressive.ipynb
+   examples/gp.ipynb
 
 .. toctree::
    :maxdepth: 3
