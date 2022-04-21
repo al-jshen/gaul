@@ -22,7 +22,7 @@ To sample from a 10 dimensional Gaussian with HMC, ADVI, or Laplace/quadratic ap
       ln_posterior,
       params,
       step_size=0.2
-      n_chains=1000, # yes, that's 1000 parallel chains
+      n_chains=1000,
       n_warmup=1000,
       n_samples=100
     )
