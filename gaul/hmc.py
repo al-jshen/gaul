@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from functools import partial
 from typing import Callable, Tuple, Union
 
@@ -131,6 +132,9 @@ def sample(
 ) -> Union[Pytree, Tuple[Pytree, Pytree]]:
 
     print("Compiling...")
+
+    if isinstance(init_params, dict):
+        init_params = OrderedDict(init_params)
 
     ln_posterior = jax.jit(partial(ln_posterior, *args, **kwargs))
     ln_posterior_grad = jax.jit(jax.grad(ln_posterior))

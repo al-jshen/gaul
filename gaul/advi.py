@@ -1,4 +1,5 @@
 import operator
+from collections import OrderedDict
 from functools import partial
 from typing import Any, Callable, Optional
 
@@ -31,7 +32,6 @@ def diag_gaussian_logpdf(x: jnp.ndarray, mean: Pytree, log_std: Pytree) -> float
     return jax.tree_util.tree_reduce(operator.add, logpdfs, 0.0)
 
 
-@partial(jax.jit, static_argnums=(0,))
 def elbo(ln_prob, rng: PRNGKey, mean: Pytree, log_std: Pytree) -> float:
     sample = diag_gaussian_sample(rng, mean, log_std)
     return ln_prob(sample) - diag_gaussian_logpdf(sample, mean, log_std)
@@ -59,6 +59,9 @@ def sample(
     Run mean-field variational inference to sample from the posterior
     distribution.
     """
+
+    if isinstance(params, dict):
+        params = OrderedDict(params)
 
     if not opt:
         if lr:
