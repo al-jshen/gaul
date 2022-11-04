@@ -19,7 +19,7 @@ def factor(
     ln_posterior: Callable[..., float],
     mass_matrix_fn: Callable,
 ) -> float:
-    tree_momentum_mass = jax.tree_util.tree_multimap(
+    tree_momentum_mass = jax.tree_map(
         lambda x, ih: x.T @ ih @ x, momentum, mass_matrix_fn(params)
     )
     m = jax.tree_util.tree_reduce(lambda acc, x: acc + x, tree_momentum_mass, 0.0)
@@ -29,9 +29,7 @@ def factor(
 @jax.jit
 @jax.vmap
 def select(mask, new, old):
-    return jax.tree_util.tree_multimap(
-        lambda _new, _old: jnp.where(mask, _new, _old), new, old
-    )
+    return jax.tree_map(lambda _new, _old: jnp.where(mask, _new, _old), new, old)
 
 
 @partial(jax.jit, static_argnums=(2, 3))
@@ -66,16 +64,16 @@ def leapfrog_step(
     grad_fn: Callable,
     mass_matrix_fn: Callable,
 ) -> Tuple[Pytree, Pytree]:
-    momentum = jax.tree_util.tree_multimap(
+    momentum = jax.tree_map(
         lambda m, g: m + g * 0.5 * step_size, momentum, grad_fn(params)
     )
-    params = jax.tree_util.tree_multimap(
+    params = jax.tree_map(
         lambda p, m, ih: p + ih @ m * step_size,
         params,
         momentum,
         mass_matrix_fn(params),
     )
-    momentum = jax.tree_util.tree_multimap(
+    momentum = jax.tree_map(
         lambda m, g: m + g * 0.5 * step_size, momentum, grad_fn(params)
     )
     return params, momentum

@@ -37,7 +37,7 @@ def tree_random_normal_like(key: PRNGKey, tree: Pytree, mean=0.0, std=1.0) -> Py
     random normal variates.
     """
     keys_tree = tree_split_keys_like(key, tree)
-    return jax.tree_util.tree_multimap(
+    return jax.tree_map(
         lambda l, k: std * (jax.random.normal(k, l.shape, l.dtype) + mean),
         tree,
         keys_tree,
@@ -48,7 +48,7 @@ def tree_stack(trees: Iterable[Pytree], axis: int = 0) -> Pytree:
     """
     Stack a list of trees along a given axis.
     """
-    return jax.tree_util.tree_multimap(lambda *x: jnp.stack(x, axis=axis), *trees)
+    return jax.tree_map(lambda *x: jnp.stack(x, axis=axis), *trees)
 
 
 def make_tree_hessian(hess_fn: Callable) -> Callable:
