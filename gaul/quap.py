@@ -46,7 +46,7 @@ def sample(
 
     pbar = progress_bar_scan(n_steps, f"Running {n_steps} optimization steps")
 
-    opt_state, _ = lax.scan(pbar(update), opt_state, jnp.arange(n_steps))
+    opt_state, opt_states = lax.scan(pbar(update), opt_state, jnp.arange(n_steps))
     params = get_params(opt_state)
 
     hessian = dense_hessian(neg_ln_posterior, params)
@@ -60,4 +60,4 @@ def sample(
     samples = jax.vmap(params_ravel)(samples)
     samples = jax.tree_util.tree_map(lambda x: x.reshape(-1, n_samples), samples)
 
-    return samples
+    return samples, opt_states

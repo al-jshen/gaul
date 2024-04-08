@@ -182,7 +182,11 @@ def sample(
 
     carry = (params, momentum_filler, key)
 
-    carry, _ = lax.scan(warmup_pbar(step_carry), carry, jnp.arange(n_warmup))
+    carry, params_momentum_warmup = lax.scan(
+        warmup_pbar(step_carry), carry, jnp.arange(n_warmup)
+    )
+
+    samples_warmup, _ = params_momentum_warmup
 
     _, params_momentum = lax.scan(sample_pbar(step_carry), carry, jnp.arange(n_samples))
 
@@ -190,8 +194,14 @@ def sample(
 
     if return_momentum:
         return (
-            transpose_samples(samples, (1, 2, 0)),
-            transpose_samples(momentum, (1, 2, 0)),
+            (
+                transpose_samples(samples, (1, 2, 0)),
+                transpose_samples(momentum, (1, 2, 0)),
+            ),
+            transpose_samples(samples_warmup, (1, 2, 0)),
         )
 
-    return transpose_samples(samples, (1, 2, 0))
+    return (
+        transpose_samples(samples, (1, 2, 0)),
+        transpose_samples(samples_warmup, (1, 2, 0)),
+    )
