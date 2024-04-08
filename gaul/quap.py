@@ -24,7 +24,6 @@ def sample(
     *args,
     **kwargs,
 ) -> Pytree:
-
     if isinstance(params, dict):
         params = OrderedDict(params)
 

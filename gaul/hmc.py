@@ -4,6 +4,7 @@ from typing import Callable, Tuple, Union
 
 import jax
 import jax.numpy as jnp
+from einops import repeat
 from jax import lax
 
 from gaul.types import PRNGKey, Pytree
@@ -128,7 +129,6 @@ def sample(
     *args,
     **kwargs,
 ) -> Union[Pytree, Tuple[Pytree, Pytree]]:
-
     print("Compiling...")
 
     if isinstance(init_params, dict):
@@ -138,11 +138,10 @@ def sample(
     ln_posterior_grad = jax.jit(jax.grad(ln_posterior))
 
     params = jax.tree_util.tree_map(
-        lambda x: jnp.repeat(x, n_chains).reshape(n_chains, *x.shape), init_params
+        lambda x: repeat(x, "... -> c ...", c=n_chains), init_params
     )
     key, momentum_filler = generate_momentum(key, params)
 
-    @jax.jit
     def mass_matrix_fn(params):
         return jax.tree_util.tree_map(lambda x: jnp.eye(x.size), params)
 
