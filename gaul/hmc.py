@@ -187,15 +187,22 @@ def sample(
     n_samples: int = 1000,
     n_warmup: int = 1000,
     target_accept: float = 0.80,
+    gamma=0.05,
+    t0=10.0,
+    kappa=0.75,
     key: PRNGKey = jax.random.PRNGKey(0),
     return_momentum: bool = False,
     *args,
     **kwargs,
 ) -> Union[Pytree, Tuple[Pytree, Pytree]]:
-    print("Compiling...")
-
     dual_averaging_params = initialize_dual_averaging_params(
-        step_size, adapt_steps=n_warmup, chains=n_chains, target_accept=target_accept
+        step_size,
+        adapt_steps=n_warmup,
+        chains=n_chains,
+        target_accept=target_accept,
+        gamma=gamma,
+        t0=t0,
+        kappa=kappa,
     )
 
     if isinstance(init_params, dict):
@@ -260,8 +267,6 @@ def sample(
     )
 
     carry = (params, momentum_filler, dual_averaging_params, key)
-
-    print(dual_averaging_params["step_size"])
 
     carry, params_momentum_dap_warmup = lax.scan(
         warmup_pbar(step_carry), carry, jnp.arange(n_warmup)
